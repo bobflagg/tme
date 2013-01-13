@@ -1,3 +1,6 @@
+http://nullege.com/codes/search/nltk.model.NgramModel
+
+sudo apt-get install git-gui
 -----
 Environment:
 
@@ -5,6 +8,20 @@ virtualenv venv
 source venv/bin/activate
 pip install django
 pip install mysql-python
+pip install -U numpy
+pip install -U scipy
+pip install -U pyyaml 
+pip install -U distribute
+pip install -U nltk
+sudo python -m nltk.downloader -d /usr/share/nltk_data stopwords punkt
+sudo python -m nltk.downloader -d /usr/share/nltk_data brown
+pip install -U gensim
+pip install -U ipython
+TME_HOME=/home/birksworks/Projects/TME
+export PYTHONPATH=$TME_HOME/tme/python:$PYTHONPATH
+
+
+
 -----
 Project:
 
