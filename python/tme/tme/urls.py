@@ -8,6 +8,8 @@ urlpatterns = patterns('',
     # Examples:
     # url(r'^$', 'tme.views.home', name='home'),
     # url(r'^tme/', include('tme.foo.urls')),
+    (r'^topics/', include('topics.urls')),
+    (r'^api/', include('api.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

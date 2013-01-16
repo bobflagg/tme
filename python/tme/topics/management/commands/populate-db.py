@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from optparse import make_option
 import os
 import simplejson
-from topics.models import Document, Phrase
+from topics.models import Document, Phrase, Topic
 
 PROJECT_DIRECTORY = '/home/birksworks/Projects/Truonex/Assigning-Topic-Labels'
 CORPUS_DIRECTORY = '%s/corpus' % PROJECT_DIRECTORY
@@ -11,16 +11,21 @@ MODEL_DIRECTORY = '%s/model' % PROJECT_DIRECTORY
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
         make_option(
-             '--d',
+            '--d',
             action='store_true',
             default=False,
             help='Populate document table'),
         make_option(
-             '--k',
+            '--k',
             action='store_true',
             default=False,
             help='Populate key phrase table'),
-        )
+        make_option(
+            '--t',
+            action='store_true',
+            default=False,
+            help='Populate topic table'),
+    )
     help = 'Populates the database with new topic model data.'
 
     def handle(self, *args, **options):
@@ -31,9 +36,13 @@ class Command(BaseCommand):
         if options['k']:
             did_nothing = False
             add_keyphrases()
+        if options['t']:
+            did_nothing = False
+            add_topics()
         if did_nothing:
             add_documents()
             add_keyphrases()
+            add_topics()
     
 def add_documents():
     '''
@@ -73,3 +82,49 @@ def add_keyphrases():
                 phrase = keyphrase
             )
             phrase.save()
+    
+def add_topics():
+    '''
+    Adds topics to the tme database.
+    '''
+    print '--->> add_topics'
+    # Remove old data.
+    Topic.objects.all().delete()
+    tpf = open("%s/top-words.txt" % MODEL_DIRECTORY)
+    current_topic = -1
+    cnt = 0
+    for line in tpf.read().split('\n')[1:-1]:
+        topic, type, token, probability = line.split('\t')
+        if type == 'u': 
+            keyphrase = keyphrase.replace('_', ' ')
+            phrase = Phrase(
+                phrase = keyphrase
+            )
+            phrase.save()
+
+def add_topics():
+    '''
+    Adds topics to the tme database.
+    '''
+    print '--->> add_topics'
+    # Remove old data.
+    Topic.objects.all().delete()
+    tpf = open("%s/top-words.txt" % MODEL_DIRECTORY)
+    ignore = True
+    current_topic = -1
+    tokens = []
+    for line in tpf.read().split('\n')[1:-1]:
+        topic_id, type, token, probability = line.split('\t')
+        if ignore and topic_id == current_topic: continue
+        current_topic = topic_id
+        ignore = False
+        if type == 'u': 
+            tokens.append(token)
+            if len(tokens) == 3:
+                top_words="{%s}" % ", ".join(tokens)
+                topic = Topic(topic_id=topic_id, top_words=top_words)
+                topic.save()
+                tokens = []
+                ignore = True
+                print topic_id, '-->>', top_words
+            

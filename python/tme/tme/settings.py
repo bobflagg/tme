@@ -128,6 +128,8 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'topics',
+    #'tastypie',
+    'piston',
 )
 
 # A sample logging configuration. The only tangible logging

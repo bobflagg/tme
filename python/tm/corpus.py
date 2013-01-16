@@ -1,3 +1,18 @@
+'''
+TME_HOME=/home/birksworks/Projects/TME
+export PYTHONPATH=$TME_HOME/tme/python:$PYTHONPATH
+source $TME_HOME/venv/bin/activate
+cd $TME_HOME/tme/python
+ipython
+from tm import corpus
+HOME_DIRECTORY = '/home/birksworks/Projects/Truonex/Assigning-Topic-Labels'
+data = corpus.build_corpus()
+d, model = corpus.model_corpus(no_below=4, no_above=0.5, keep_n=1000, num_topics=12)
+m = corpus.ngram_model(data)
+t = model.state.get_lambda()[0]
+corpus.best_keyphrases(labels, t, m, d)
+'''
+from data.util import word_tokenize_doc
 from nltk.corpus import stopwords as nltk_stopwords 
 import os
 import simplejson
@@ -7,16 +22,16 @@ with warnings.catch_warnings():
     from gensim import corpora, models, similarities
     from gensim.utils import tokenize
 
-HOME_DIR = '/home/birksworks/Projects/Truonex/Assigning-Topic-Labels'
+HOME_DIRECTORY = '/home/birksworks/Projects/TME'
 
-def stop_words(directory=HOME_DIR):
+def stop_words(directory=HOME_DIRECTORY):
     stopwords = nltk_stopwords.words('english')
     f = open('%s/model/stop-words.lst' % directory)
     stopwords.extend(f.read().split())
     f.close()
     return stopwords
 
-def build_corpus(directory=HOME_DIR):
+def build_corpus(directory=HOME_DIRECTORY):
     '''
     Builds and returns a corpus based on the text documents in the given directory.
     ''' 
@@ -30,8 +45,9 @@ def build_corpus(directory=HOME_DIR):
             project_id = file_name[:-4]            
             title=title_map[project_id],
             content = open(directory+"/corpus/"+file_name).read()
-            text = list(tokenize(content.lower()))
-            text = content.lower().split()
+            #text = list(tokenize(content.lower()))
+            #text = content.lower().split()
+            text = word_tokenize_doc(content.lower())
             data[project_id] = {
                 'id':project_id,
                 'title':title[0],
@@ -40,7 +56,7 @@ def build_corpus(directory=HOME_DIR):
             }
     return data
 
-def build_and_save_dictionary(data, directory=HOME_DIR, no_below=4, no_above=0.5, keep_n=2500):
+def build_and_save_dictionary(data, directory=HOME_DIRECTORY, no_below=4, no_above=0.5, keep_n=2500):
     '''
     Builds and saves a gensim dictionary based on the given corpus.
         @param no_below: A lower limit on the number of documents a token must appear in to be kept.
@@ -66,7 +82,7 @@ def get_bow_corpus(data, dictionary):
     bow_corpus = [dictionary.doc2bow(text) for text in texts]
     return bow_corpus
 
-def build_and_save_lda_model(dictionary, bow_corpus, directory=HOME_DIR, num_topics=12):
+def build_and_save_lda_model(dictionary, bow_corpus, directory=HOME_DIRECTORY, num_topics=12):
     '''
     Builds and saves an LDA model based on the given dictioinary and corpus.
         @param num_topics: The number of topics to use in building the LDA model.
@@ -75,7 +91,7 @@ def build_and_save_lda_model(dictionary, bow_corpus, directory=HOME_DIR, num_top
     lda.save('%s/model/tm.lda' % directory)
     return lda
     
-def model_corpus(directory=HOME_DIR, num_topics=12, no_below=4, no_above=0.5, keep_n=2500):
+def model_corpus(directory=HOME_DIRECTORY, num_topics=12, no_below=4, no_above=0.5, keep_n=2500):
     data = build_corpus(directory)
     dictionary = build_and_save_dictionary(
         data, 
@@ -88,7 +104,6 @@ def model_corpus(directory=HOME_DIR, num_topics=12, no_below=4, no_above=0.5, ke
     model = build_and_save_lda_model(dictionary, bow_corpus, directory, num_topics=num_topics)
     for t in model.show_topics(topics=num_topics): print t
     return dictionary, model
-
 from math import log
 from nltk.model import NgramModel  
 from nltk.probability import LidstoneProbDist, WittenBellProbDist
