@@ -70,6 +70,29 @@ class DataManager(object):
         '''
         return self.get_records(query)
     
+    def get_project(self, project_id):    
+        query = '''
+            SELECT
+                p.id, p.title, p.description, p.source_url
+            FROM
+                public.projects p
+            WHERE
+                p.id = %d
+        ''' % project_id
+        record = self.get_records(query)[0]
+        project = ProjectInfo(record)
+        project.load_sections(self)
+        project.load_tags(self)
+        content = project.extract_text().decode("utf-8" )
+        return {
+                'id':project.id,
+                'title':project.title.decode("utf-8" ),
+                'url':project.source_url,
+                'text':list(word_tokenize_doc(content.lower())),
+                'content':content,
+                'tags':project.tags
+        }
+    
     def get_project_data(self):    
         query = '''
             SELECT
@@ -87,10 +110,10 @@ class DataManager(object):
             project.load_sections(self)
             project.load_sections(self)
             project.load_tags(self)
-            content = project.extract_text()
+            content = project.extract_text().decode("utf-8" )
             projects.append({
                 'id':project.id,
-                'title':project.title,
+                'title':project.title.decode("utf-8" ),
                 'url':project.source_url,
                 'text':list(word_tokenize_doc(content.lower())),
                 'content':content,

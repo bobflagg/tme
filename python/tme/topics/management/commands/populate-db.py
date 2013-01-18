@@ -1,20 +1,33 @@
+from codecs import open as codecs_open
 from django.core.management.base import BaseCommand
 from optparse import make_option
 import os
 import simplejson
+from corpus.models import Project
 from topics.models import Document, Phrase, Topic
 
 PROJECT_DIRECTORY = '/home/birksworks/Projects/Truonex/Assigning-Topic-Labels'
 CORPUS_DIRECTORY = '%s/corpus' % PROJECT_DIRECTORY
 MODEL_DIRECTORY = '%s/model' % PROJECT_DIRECTORY
-
+TME_HOME = '/home/birksworks/Projects/TME'
+TME_CORPUS_DIRECTORY = '%s/tme-corpus' % TME_HOME
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
+        make_option(
+            '--c',
+            action='store_true',
+            default=False,
+            help='Populate corpus project table'),
         make_option(
             '--d',
             action='store_true',
             default=False,
             help='Populate document table'),
+        make_option(
+            '--e',
+            action='store_true',
+            default=False,
+            help='Export project data for topic modeling'),
         make_option(
             '--k',
             action='store_true',
@@ -30,20 +43,55 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         did_nothing = True
+        if options['c']:
+            did_nothing = False
+            add_projects()
         if options['d']:
             did_nothing = False
             add_documents()
+        if options['e']:
+            did_nothing = False
+            export_projects()
         if options['k']:
             did_nothing = False
             add_keyphrases()
         if options['t']:
             did_nothing = False
             add_topics()
-        if did_nothing:
-            add_documents()
-            add_keyphrases()
-            add_topics()
     
+def add_projects():
+    '''
+    Adds project text to the tme database.
+    
+    Data is read from a file at
+        ${TME_HOME}/model/src.info
+    previously prepared by running
+        ~/bin/build-corpus.sh 
+    '''
+    print '--->> add_projects'
+    # Remove old data.
+    Project.objects.all().delete()
+    f = codecs_open('%s/model/src.info' % TME_HOME, "r", "utf-8" )
+    for line in f:
+        try:
+            project_id, title, url, source, content = line.strip().split('||||')
+            processed = False
+            if 'ciid' in url: processed = True
+            project = Project(
+                project_id = project_id,
+                title = title,
+                url = url,
+                source = source,
+                content = content,
+                processed = processed
+            )
+            project.save()
+        except Exception, e:
+            print 'failed for line:'
+            print line
+            print e.message
+    f.close()
+        
 def add_documents():
     '''
     Adds corpus documents to the tme database.
@@ -128,3 +176,22 @@ def add_topics():
                 ignore = True
                 print topic_id, '-->>', top_words
             
+    
+def export_projects():
+    '''
+    Exports project data for topic modeling.
+    '''
+    print '--->> export_projects'
+    # Remove old data.
+    fileList = os.listdir(TME_CORPUS_DIRECTORY)
+    for fileName in fileList:
+        os.remove(TME_CORPUS_DIRECTORY+"/"+fileName)
+    title_map = {}
+    for project in Project.objects.all():
+        fp = codecs_open('%s/%s.txt' % (TME_CORPUS_DIRECTORY, project.project_id), "w", "utf-8" )
+        fp.write(project.content)
+        fp.close()
+        title_map[project.project_id] = project.title
+    f = open('%s/title-map.json' % TME_CORPUS_DIRECTORY, 'w')
+    simplejson.dump(title_map, f, indent=4) 
+    f.close()

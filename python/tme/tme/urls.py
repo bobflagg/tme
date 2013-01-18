@@ -8,6 +8,7 @@ urlpatterns = patterns('',
     # Examples:
     # url(r'^$', 'tme.views.home', name='home'),
     # url(r'^tme/', include('tme.foo.urls')),
+    (r'^corpus/', include('corpus.urls')),
     (r'^topics/', include('topics.urls')),
     (r'^api/', include('api.urls')),
 

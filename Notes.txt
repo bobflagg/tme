@@ -1,3 +1,10 @@
+Screen Scraping with BeautifulSoup and lxml
+http://rhodesmill.org/brandon/chapters/screen-scraping/
+-----
+Scrapy
+http://scrapy.org/
+-----
+
 http://nullege.com/codes/search/nltk.model.NgramModel
 
 sudo apt-get install git-gui
@@ -19,9 +26,9 @@ pip install -U gensim
 pip install -U ipython
 TME_HOME=/home/birksworks/Projects/TME
 export PYTHONPATH=$TME_HOME/tme/python:$PYTHONPATH
-
-
-
+django-piston 0.2.3
+http://pypi.python.org/pypi/django-piston/0.2.3
+https://bitbucket.org/jespern/django-piston/wiki/Home
 -----
 Project:
 
@@ -33,6 +40,7 @@ Database:
 mysql -uroot -pyugioh60 mysql
 CREATE DATABASE tme;
 GRANT ALL ON tme.* TO 'tme'@'localhost' IDENTIFIED BY 'tme12';
+GRANT FILE ON *.* TO 'tme'@'localhost';
 FLUSH PRIVILEGES;
 
 DATABASES = {
@@ -45,6 +53,12 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+
+mysql -utme -ptme12 tme
+SELECT d.project_id, d.title, d.content, d.url INTO OUTFILE '/tmp/result.txt'
+  FIELDS TERMINATED BY '||||'
+  LINES TERMINATED BY '\n'
+  FROM topics_document d;
 -----
 Other settings
 
